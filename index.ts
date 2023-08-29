@@ -20,7 +20,8 @@ export interface RequestExpress<
 export interface ResponseExpress {
   send: (body: any) => void
   json: (body: any) => void
-  status: (code: number) => void
+  status: (code: number) => this
+  writableEnded: boolean
 }
 
 export type requestHandler = (
@@ -51,6 +52,18 @@ export interface Paths {
 
 export default class Express {
   private paths: Paths = Express.initPaths()
+  private onPathNotFound: (req: IncomingMessage, res: ServerResponse) => void
+
+  constructor({
+    onPathNotFound = (req, res) => {
+      res.statusCode = 404
+      res.end('Path not found')
+    },
+  }: {
+    onPathNotFound?: (req: IncomingMessage, res: ServerResponse) => void
+  } = {}) {
+    this.onPathNotFound = onPathNotFound
+  }
 
   private getPath(
     path: string,
@@ -164,8 +177,7 @@ export default class Express {
       middlewares = _middlewares
       params = _params
     } catch {
-      res.statusCode = 404
-      res.end('Path not found')
+      this.onPathNotFound(req, res)
       return
     }
 
@@ -237,7 +249,7 @@ export default class Express {
   }
 
   private static createExpressResponse(res: ServerResponse): ResponseExpress {
-    return {
+    const request: ResponseExpress = {
       send: body => {
         res.end(body)
       },
@@ -247,8 +259,12 @@ export default class Express {
       },
       status: code => {
         res.statusCode = code
+        return request
       },
+      writableEnded: res.writableEnded,
     }
+
+    return request
   }
 
   private static createExpressRequest(
@@ -345,6 +361,30 @@ export default class Express {
   private static initPaths() {
     return {
       '/': Express.initPath(),
+    }
+  }
+
+  static json(): requestHandler {
+    return (req, res, next) => {
+      if (req.method !== 'get') {
+        req.body = JSON.parse(req.body)
+      }
+      next()
+    }
+  }
+
+  static onTimeout({
+    ms,
+    handler,
+  }: {
+    ms: number
+    handler: (req: RequestExpress, res: ResponseExpress) => void
+  }): requestHandler {
+    return (req, res, next) => {
+      setTimeout(() => {
+        handler(req, res)
+      }, ms)
+      next()
     }
   }
 }
