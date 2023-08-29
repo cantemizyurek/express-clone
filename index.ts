@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http'
 
-interface RequestExpress<
+export interface RequestExpress<
   Body = any,
   Params = {
     [key: string]: any
@@ -17,26 +17,26 @@ interface RequestExpress<
   url: string
 }
 
-interface ResponseExpress {
+export interface ResponseExpress {
   send: (body: any) => void
   json: (body: any) => void
   status: (code: number) => void
 }
 
-type requestHandler = (
+export type requestHandler = (
   req: RequestExpress,
   res: ResponseExpress,
   next: () => void
 ) => void
 
-enum Method {
+export enum Method {
   GET = 'get',
   POST = 'post',
   PUT = 'put',
   DELETE = 'delete',
 }
 
-interface Path {
+export interface Path {
   use: requestHandler[]
   get: requestHandler[]
   post: requestHandler[]
@@ -44,21 +44,19 @@ interface Path {
   delete: requestHandler[]
 }
 
-interface Paths {
+export interface Paths {
   [key: string]: Paths | Path
   '/': Path
 }
 
-class Express {
+export default class Express {
   private paths: Paths = Express.initPaths()
 
   private getPath(
     path: string,
     {
       cur = this.paths,
-      onNotFound = () => {
-        throw new Error('Path not found')
-      },
+      onNotFound = Express.handleOnNotFoundThrow,
       onIteration = () => {},
       onFound = () => {},
     }: {
@@ -350,24 +348,3 @@ class Express {
     }
   }
 }
-
-const app = new Express()
-
-app.use('*', (req, res, next) => {
-  console.log('middleware')
-  next()
-})
-
-app.get('/', (req, res, next) => {
-  res.send('Hello world')
-})
-
-app.get('/user/:id', (req, res, next) => {
-  res.json({
-    id: req.params.id,
-  })
-})
-
-app.listen(3000, () => {
-  console.log('Server is running')
-})
