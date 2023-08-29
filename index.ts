@@ -21,7 +21,8 @@ export interface ResponseExpress {
   send: (body: any) => void
   json: (body: any) => void
   status: (code: number) => this
-  writableEnded: boolean
+  writableEnded: () => boolean
+  setHeader: (key: string, value: string) => this
 }
 
 export type requestHandler = (
@@ -261,7 +262,11 @@ export default class Express {
         res.statusCode = code
         return request
       },
-      writableEnded: res.writableEnded,
+      writableEnded: () => res.writableEnded,
+      setHeader: (key, value) => {
+        res.setHeader(key, value)
+        return request
+      },
     }
 
     return request
@@ -382,6 +387,7 @@ export default class Express {
   }): requestHandler {
     return (req, res, next) => {
       setTimeout(() => {
+        if (res.writableEnded()) return
         handler(req, res)
       }, ms)
       next()
