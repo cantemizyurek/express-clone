@@ -52,13 +52,6 @@ interface Paths {
 class Express {
   private paths: Paths = Express.initPaths()
 
-  constructor() {
-    this.use('*', (req, res, next) => {
-      res.status(404)
-      res.send('Not found')
-    })
-  }
-
   private getPath(
     path: string,
     {
@@ -104,7 +97,7 @@ class Express {
       method?: Method
     }
   ) {
-    let middlewares: requestHandler[] = []
+    const middlewares: requestHandler[] = []
     const params: { [key: string]: string } = {}
 
     this.getPath(path, {
@@ -114,11 +107,16 @@ class Express {
         return find
       },
       onIteration: (key, cur) => {
-        middlewares = Express.handleOnIterationGetMiddlewares(key, cur, {
-          method,
-        })
+        middlewares.push(
+          ...Express.handleOnIterationGetMiddlewares(key, cur, { method })
+        )
       },
       onFound: (key, cur) => {
+        if (cur['*'] && cur['*']['/']) {
+          middlewares.push(...cur['*']['/']['use'])
+          middlewares.push(...cur['*']['/'][method])
+        }
+
         if (cur['/']) {
           middlewares.push(...cur['/']['use'])
         }
@@ -159,13 +157,19 @@ class Express {
     let middlewares: requestHandler[] = []
     let params: { [key: string]: string } = {}
 
-    const { middlewares: _middlewares, params: _params } =
-      this.getExpressValues(req.url || '', {
-        method: req.method?.toLowerCase() as Method,
-      })
+    try {
+      const { middlewares: _middlewares, params: _params } =
+        this.getExpressValues(req.url || '', {
+          method: req.method?.toLowerCase() as Method,
+        })
 
-    middlewares = _middlewares
-    params = _params
+      middlewares = _middlewares
+      params = _params
+    } catch {
+      res.statusCode = 404
+      res.end('Path not found')
+      return
+    }
 
     const expressRequest = Express.createExpressRequest(req, {
       params,
@@ -365,5 +369,5 @@ app.get('/user/:id', (req, res, next) => {
 })
 
 app.listen(3000, () => {
-  console.log('Server started')
+  console.log('Server is running')
 })
