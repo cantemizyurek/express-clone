@@ -1,4 +1,4 @@
-import PathManger from './PathManger'
+import PathManger from './PathManager'
 import { Paths } from '../types'
 
 export default class ParamsManager {

@@ -1,13 +1,13 @@
 import { Path, Paths } from '../types'
 
-export default class PathManger {
-  private paths: Paths = PathManger.initPaths()
+export default class PathManager {
+  private paths: Paths = PathManager.initPaths()
 
   getPath(
     path: string,
     {
       cur = this.paths,
-      onNotFound = PathManger.handleOnNotFoundThrow,
+      onNotFound = PathManager.handleOnNotFoundThrow,
       onIteration = () => {},
       onFound = () => {},
     }: {
@@ -40,7 +40,7 @@ export default class PathManger {
 
   private static initPaths(): Paths {
     return {
-      '/': PathManger.initPath(),
+      '/': PathManager.initPath(),
     }
   }
 
@@ -59,7 +59,7 @@ export default class PathManger {
   }
 
   static handleOnNotFoundCreate(key: string, cur: Paths): Paths {
-    cur[key] = PathManger.initPaths()
+    cur[key] = PathManager.initPaths()
     return cur[key] as Paths
   }
 }

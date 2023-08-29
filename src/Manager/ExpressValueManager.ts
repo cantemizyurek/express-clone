@@ -1,6 +1,6 @@
 import MiddlewareManger from './MiddleWareManager'
 import ParamsManager from './ParamsManager'
-import PathManger from './PathManger'
+import PathManger from './PathManager'
 import { Methods, requestHandler } from '../types'
 
 export default class ExpressValueManager {

@@ -1,4 +1,4 @@
-import PathManger from './PathManger'
+import PathManger from './PathManager'
 import { Methods, Paths, requestHandler } from '../types'
 
 export default class MiddlewareManger {
