@@ -29,6 +29,62 @@ export default class Express {
     this.onNotFound = onNotFound
   }
 
+  use(handler: requestHandler): Express
+  use(path: string, handler: requestHandler): Express
+  public use(path: string | requestHandler, handler?: requestHandler) {
+    this.handleMiddleWare(path, {
+      handler: handler as requestHandler,
+      method: Methods.USE,
+    })
+    return this
+  }
+
+  public get(path: string, handler: requestHandler) {
+    this.valueManager.addMiddleware(path, Methods.GET, handler)
+    return this
+  }
+
+  public post(path: string, handler: requestHandler) {
+    this.valueManager.addMiddleware(path, Methods.POST, handler)
+    return this
+  }
+
+  public put(path: string, handler: requestHandler) {
+    this.valueManager.addMiddleware(path, Methods.PUT, handler)
+    return this
+  }
+
+  public delete(path: string, handler: requestHandler) {
+    this.valueManager.addMiddleware(path, Methods.DELETE, handler)
+    return this
+  }
+
+  public handleMiddleWare(
+    path: string | requestHandler,
+    {
+      handler,
+      method,
+    }: {
+      handler?: requestHandler
+      method: Methods
+    }
+  ) {
+    if (typeof path === 'string') {
+      this.valueManager.addMiddleware(path, method, handler as requestHandler)
+    } else {
+      this.valueManager.addMiddleware('*', method, path as requestHandler)
+    }
+  }
+
+  public listen(port: number, callback?: () => void) {
+    this.server.listen(port, this.handleRequest.bind(this), callback)
+    return this
+  }
+
+  public close() {
+    this.server.close()
+  }
+
   private async handleRequest(req: IncomingMessage, res: ServerResponse) {
     let middlewares: requestHandler[] = []
     let params: { [key: string]: string } = {}
@@ -61,40 +117,5 @@ export default class Express {
     }
 
     next()
-  }
-
-  public use(path: string, handler: requestHandler) {
-    this.valueManager.addMiddleware(path, Methods.USE, handler)
-    return this
-  }
-
-  public get(path: string, handler: requestHandler) {
-    this.valueManager.addMiddleware(path, Methods.GET, handler)
-    return this
-  }
-
-  public post(path: string, handler: requestHandler) {
-    this.valueManager.addMiddleware(path, Methods.POST, handler)
-    return this
-  }
-
-  public put(path: string, handler: requestHandler) {
-    this.valueManager.addMiddleware(path, Methods.PUT, handler)
-    return this
-  }
-
-  public delete(path: string, handler: requestHandler) {
-    this.valueManager.addMiddleware(path, Methods.DELETE, handler)
-    return this
-  }
-
-  public listen(port: number, callback?: () => void) {
-    this.server.listen(port, this.handleRequest.bind(this), callback)
-    return this
-  }
-
-  public close() {
-    this.server.close()
-    return this
   }
 }
