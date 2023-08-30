@@ -1,4 +1,4 @@
-import MiddlewareManger from './MiddleWareManager'
+import MiddlewareManger from './MiddlewareManager'
 import ParamsManager from './ParamsManager'
 import PathManger from './PathManager'
 import { Methods, requestHandler } from '../types'
